@@ -7,6 +7,8 @@ const router = Router();
 router.get("/oauth", (req, res) => {
   const url = getGmailAuthUrl();
 
+  
+
   res.redirect(url);
 });
 

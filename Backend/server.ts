@@ -1,8 +1,10 @@
-import express from "express";
 import "dotenv/config";
+import express from "express";
 import { inngest, functions } from "./src/inngest"
 import { serve } from "inngest/express";
 import gmailRoutes from "./src/integrations/gmail/gmail.routes";
+
+
 
 const app = express();
 
