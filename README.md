@@ -101,43 +101,6 @@ employee.productivity.high
 employee.alert.required
 ```
 
-Example:
-
-```ts
-await inngest.send({
-  name: "employee.productivity.updated",
-  data: {
-    employeeId,
-    productivityScore,
-    period: "daily",
-  },
-});
-```
-
----
-
-## LinkedIn events
-
-```text
-linkedin.post.scheduled
-linkedin.post.publish
-linkedin.post.published
-linkedin.post.failed
-```
-
-Example:
-
-```ts
-await inngest.send({
-  name: "linkedin.post.scheduled",
-  data: {
-    postId,
-    scheduledFor,
-  },
-});
-```
-
----
 
 ## Notification events
 
@@ -148,9 +111,7 @@ notification.discord
 notification.whatsapp
 ```
 
-These allow the application to separate the event that something happened from the mechanism used to notify someone.
 
----
 
 # 4. Gmail Workflow
 
@@ -182,38 +143,6 @@ Inngest
   └── Notify manager if necessary
 ```
 
-### Example workflow
-
-```ts
-const processEmail = inngest.createFunction(
-  {
-    id: "process-incoming-email",
-    triggers: [{ event: "email.received" }],
-  },
-  async ({ event, step }) => {
-    const email = await step.run("store-email", async () => {
-      // Save email to PostgreSQL
-    });
-
-    const classification = await step.run(
-      "classify-email",
-      async () => {
-        // Determine spam / important / normal
-      }
-    );
-
-    if (classification === "important") {
-      await step.run("notify-manager", async () => {
-        // Send Discord/WhatsApp notification
-      });
-    }
-
-    return classification;
-  }
-);
-```
-
----
 
 # 5. Email Classification
 
@@ -231,36 +160,6 @@ Bossy should group incoming emails into categories.
              ▼          ▼          ▼
           IMPORTANT   NORMAL      SPAM
 ```
-
-The initial implementation can use rules such as:
-
-- Sender
-- Subject
-- Keywords
-- Sender history
-- Existing labels
-- Email metadata
-
-An AI/LLM classifier can be added later.
-
-### Example database fields
-
-```text
-email
-├── id
-├── provider_message_id
-├── thread_id
-├── sender
-├── recipient
-├── subject
-├── body
-├── classification
-├── is_read
-├── received_at
-└── created_at
-```
-
----
 
 # 6. Gmail Dashboard
 
@@ -314,29 +213,6 @@ notification.send
   └── WhatsApp
 ```
 
-Discord can be implemented first for development because it can provide a relatively simple webhook/bot-based notification path.
-
-WhatsApp can be added as a separate provider.
-
-The notification service should hide provider-specific implementation:
-
-```ts
-interface NotificationProvider {
-  send(message: string, recipient: string): Promise<void>;
-}
-```
-
-Possible implementations:
-
-```text
-DiscordNotificationProvider
-WhatsAppNotificationProvider
-```
-
-This makes it possible to switch providers without changing the rest of the application.
-
----
-
 # 8. LinkedIn Automation
 
 Bossy should allow managers to prepare and schedule LinkedIn posts.
@@ -364,34 +240,6 @@ linkedin.post.publish
 LinkedIn
 ```
 
-Example:
-
-```ts
-const publishLinkedInPost = inngest.createFunction(
-  {
-    id: "publish-linkedin-post",
-    triggers: [{ event: "linkedin.post.scheduled" }],
-  },
-  async ({ event, step }) => {
-    await step.sleepUntil(
-      "wait-until-scheduled",
-      event.data.scheduledFor
-    );
-
-    await step.run("publish", async () => {
-      // Call LinkedIn API
-    });
-
-    await step.run("record-publication", async () => {
-      // Update PostgreSQL
-    });
-  }
-);
-```
-
-The actual LinkedIn API permissions and publishing capabilities must be verified during implementation.
-
----
 
 # 9. Employee Productivity
 
@@ -478,24 +326,7 @@ Important: productivity alerts should be based on **explicit, measurable metrics
 
 Initial entities:
 
-```text
-User
-Employee
-Team
-Email
-EmailThread
-EmailClassification
-Notification
-LinkedInPost
-ProductivityMetric
-ProductivityAlert
-Integration
-AutomationLog
-```
 
-Possible relationships:
-
-```text
 User
  │
  ├── manages ──> Employee
@@ -601,241 +432,7 @@ Manager's browser
 
 This avoids requiring the browser to constantly poll the API.
 
----
 
-# 14. Suggested Node.js Structure
 
-```text
-src/
-│
-├── server.ts
-│
-├── routes/
-│   ├── email.routes.ts
-│   ├── employee.routes.ts
-│   ├── linkedin.routes.ts
-│   └── notification.routes.ts
-│
-├── controllers/
-│
-├── services/
-│   ├── gmail.service.ts
-│   ├── email.service.ts
-│   ├── employee.service.ts
-│   ├── linkedin.service.ts
-│   └── notification.service.ts
-│
-├── inngest/
-│   ├── client.ts
-│   ├── email.functions.ts
-│   ├── linkedin.functions.ts
-│   ├── productivity.functions.ts
-│   └── notification.functions.ts
-│
-├── integrations/
-│   ├── gmail/
-│   ├── linkedin/
-│   ├── discord/
-│   └── whatsapp/
-│
-├── websocket/
-│   └── server.ts
-│
-├── redis/
-│   └── client.ts
-│
-└── db/
-    ├── schema/
-    └── client.ts
-```
-
----
-
-# 15. Core Inngest Functions
-
-The initial project should eventually contain functions similar to:
-
-```text
-processIncomingEmail
-classifyEmail
-notifyImportantEmail
-sendEmail
-scheduleLinkedInPost
-publishLinkedInPost
-calculateProductivity
-checkProductivityAlerts
-sendDiscordNotification
-sendWhatsAppNotification
-```
-
-These should be separated into small durable workflows rather than putting the entire application inside one huge Inngest function.
-
----
-
-# 16. MVP
-
-Build the first version in this order:
-
-### Phase 1 — Foundation
-
-- Node.js API
-- PostgreSQL
-- Redis
-- Inngest Dev Server
-- Authentication
-- Basic dashboard
-
-### Phase 2 — Gmail
-
-- Gmail OAuth
-- Fetch inbox
-- Store emails
-- Display emails
-- Send emails
-- `email.received` event
-- Important/spam classification
-
-### Phase 3 — Notifications
-
-- Discord integration
-- Important email alerts
-- Productivity alerts
-
-### Phase 4 — Inngest workflows
-
-- Retries
-- Delayed jobs
-- Scheduled workflows
-- Fan-out
-- Durable steps
-- Workflow history
-
-### Phase 5 — LinkedIn
-
-- Create posts
-- Schedule posts
-- Publish posts
-- Publication history
-
-### Phase 6 — Productivity
-
-- Employee activity ingestion
-- Metrics
-- Configurable thresholds
-- Productivity dashboard
-- Alerts
-
-### Phase 7 — Real-time infrastructure
-
-- WebSockets
-- Redis Pub/Sub
-- Multi-instance Node.js
-- Connection management
-- Rate limiting
-- Monitoring
-
----
-
-# 17. Example End-to-End Workflow
-
-A manager receives an important email.
-
-```text
-                 Gmail
-                   │
-                   ▼
-            email.received
-                   │
-                   ▼
-               Inngest
-                   │
-          ┌────────┴────────┐
-          ▼                 ▼
-     Store Email       Classify Email
-                            │
-                            ▼
-                       IMPORTANT
-                            │
-                            ▼
-                  notification.send
-                            │
-                    ┌───────┴───────┐
-                    ▼               ▼
-                 Discord         WhatsApp
-                    │
-                    ▼
-              Manager alerted
-                    │
-                    ▼
-             Bossy WebSocket
-                    │
-                    ▼
-             Dashboard updates
-```
-
-This demonstrates the main architectural purpose of Bossy:
-
-**External event → Inngest workflow → persistent state → notification → real-time UI.**
-
----
-
-# 18. Long-Term Architecture
-
-The final system should be designed so that additional integrations can be added without rewriting the core application.
-
-```text
-                    ┌─────────────┐
-                    │    Bossy    │
-                    └──────┬──────┘
-                           │
-                    Event-driven core
-                           │
-             ┌─────────────┼──────────────┐
-             ▼             ▼              ▼
-           Gmail        LinkedIn       Employees
-             │             │              │
-             └─────────────┼──────────────┘
-                           ▼
-                        Inngest
-                           │
-          ┌────────────────┼─────────────────┐
-          ▼                ▼                 ▼
-       PostgreSQL        Redis           Integrations
-          │                │                 │
-          │                │          ┌──────┴──────┐
-          │                │          ▼             ▼
-          │                │       Discord       WhatsApp
-          │                │
-          └────────────────┼───────────────┐
-                           ▼               │
-                       WebSockets          │
-                           │               │
-                           ▼               ▼
-                       Bossy Dashboard
-```
-
----
-
-## Core Principle
-
-Bossy should not treat Inngest as merely a place to put slow functions.
-
-The architectural goal is to make important business actions **event-driven and durable**:
-
-```text
-Something happens
-      ↓
-Emit an event
-      ↓
-Inngest receives it
-      ↓
-Run one or more durable steps
-      ↓
-Persist the result
-      ↓
-Notify interested systems/users
-      ↓
-Update the real-time dashboard
-```
 
 That architecture makes Bossy a practical project for learning **Node.js, PostgreSQL, Redis, WebSockets, OAuth integrations, event-driven architecture, background jobs, retries, scheduling, and durable workflows**.
