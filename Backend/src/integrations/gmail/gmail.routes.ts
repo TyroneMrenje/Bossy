@@ -1,13 +1,11 @@
 import { Router } from "express";
 import { gmailAuthClient } from "./gmail.client";
-import { getGmailAuthUrl } from "./gmail.auth";
+import { getGmailAuthUrl,handleOAuthCallback } from "./gmail.auth";
 
 const router = Router();
 
 router.get("/oauth", (req, res) => {
   const url = getGmailAuthUrl();
-
-  
 
   res.redirect(url);
 });

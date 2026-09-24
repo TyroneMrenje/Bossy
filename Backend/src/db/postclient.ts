@@ -14,3 +14,10 @@ pool.on("error", (err) => {
   process.exit(1);
 });
 
+export async function query<T = any>(text: string, params?: any[]) {
+  const start = Date.now();
+  const result = await pool.query(text, params);
+  
+  return result as { rows: T[]; rowCount: number };
+}
+
