@@ -25,7 +25,8 @@ export async function handleOAuthCallback(code: string) {
       if (!tokens.access_token || !tokens.refresh_token) {
         throw new Error("Google did not return the expected tokens");
       }
-    
+
+      console.log("tokens from getToken:", tokens);
       gmailAuthClient.setCredentials(tokens);
       const profile = await google.oauth2({ version: "v2", auth: gmailAuthClient }).userinfo.get();
     
