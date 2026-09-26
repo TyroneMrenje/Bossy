@@ -5,7 +5,8 @@ import { query } from "../../db/postclient";
 export const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.compose",
-  "https://www.googleapis.com/auth/gmail.modify"
+  "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/userinfo.email",
 
 ];
 
@@ -26,10 +27,13 @@ export async function handleOAuthCallback(code: string) {
         throw new Error("Google did not return the expected tokens");
       }
 
-      console.log("tokens from getToken:", tokens);
+
       gmailAuthClient.setCredentials(tokens);
-      const profile = await google.oauth2({ version: "v2", auth: gmailAuthClient }).userinfo.get();
-    
+
+      const oauth2 = google.oauth2({ version: "v2", auth: gmailAuthClient });
+
+      const profile=await oauth2.userinfo.get();
+
       await query(
         `INSERT INTO gmail_state (email_address, access_token, refresh_token, token_expiry)
         VALUES ($1, $2, $3, to_timestamp($4 / 1000.0))`,
