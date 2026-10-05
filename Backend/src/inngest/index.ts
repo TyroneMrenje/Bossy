@@ -1,61 +1,42 @@
 import { Inngest } from "inngest";
 import { query } from "../db/postclient";
 
+const IMPORTANT_SENDERS = [
+  "tyronemrenje@gmail.com",
+  "tyronemrenje1985@gmail.com",
+  "boss@gmail.com",
+];
 
-// Create a client to send and receive events
+
 export const inngest = new Inngest({ id: "my-app" });
 
-const emailReceived = inngest.createFunction(
-    {
-        id:"process-email",
-        triggers: [
-            {event: "email.received"}
+export const emailReceived = inngest.createFunction(
+  {
+    id: "process-email",
+    triggers: [{ event: "email.received" }],
+  },
+  async ({ event, step }) => {
+    const isImportant = await step.run("classify-email", async () => {
+      return IMPORTANT_SENDERS.includes(event.data.sender);
+    });
+
+    await step.run("save-email", async () => {
+      await query(
+        `INSERT INTO emails (message_id, thread_id, sender, recipient, subject, is_important, received_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (message_id) DO NOTHING`,
+        [
+          event.data.messageId,
+          event.data.threadId,
+          event.data.sender,
+          event.data.recipient,
+          event.data.subject,
+          isImportant,
+          event.data.receivedAt,
         ]
-    },
+      );
+    });
 
-    async({event,step}) =>{
-      
-        const email = await step.run(
-        "fetch-email",
-        async () => {
-
-            const fetchEmail = await query<{email_address:string}>("SELECT email_address FROM gmail_state WHERE email_address = $1",[
-                event.data.recipient
-            ]);
-
-            return fetchEmail;        
-        }
-        );
-
-        const classification = await step.run(
-        "classify-email",
-        async () => {
-           const importantEmails=[
-              "tyronemrenje@gmail.com",
-              "tyronemrenje1985@gmail.com",
-              "boss@gmail.com"
-           ]
-
-           for(const importantEmail of importantEmails){
-             if (!(event.data.sender == importantEmail)){
-
-             }
-
-           }
-        }
-        );
-
-        await step.run(
-        "save-email",
-        async () => {
-           
-        }
-        );
-
-        return classification;
-
-    }
-)
-export const functions = [
-    emailReceived
-];
+    return { isImportant };
+  }
+);

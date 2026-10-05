@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { gmailAuthClient } from "./gmail.client";
 import { getGmailAuthUrl,handleOAuthCallback , getGmailClient, getLastHistoryId, setLastHistoryId} from "./gmail.auth";
 import { startWatch } from "./gmail.watch";
 import { inngest } from "../../inngest/index"; 

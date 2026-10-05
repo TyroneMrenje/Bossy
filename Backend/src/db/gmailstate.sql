@@ -1,11 +1,11 @@
-
-CREATE TABLE IF NOT EXISTS gmail_state (
+CREATE TABLE IF NOT EXISTS emails (
   id SERIAL PRIMARY KEY,
-  email_address TEXT NOT NULL,
-  access_token TEXT NOT NULL,
-  refresh_token TEXT NOT NULL,
-  token_expiry TIMESTAMPTZ NOT NULL,
-  last_history_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+  message_id TEXT UNIQUE NOT NULL,
+  thread_id TEXT,
+  sender TEXT,
+  recipient TEXT,
+  subject TEXT,
+  is_important BOOLEAN DEFAULT false,
+  received_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
