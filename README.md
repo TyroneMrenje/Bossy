@@ -73,23 +73,6 @@ email.replied
 email.sent
 ```
 
-Example:
-
-```ts
-await inngest.send({
-  name: "email.received",
-  data: {
-    messageId,
-    threadId,
-    sender,
-    recipient,
-    subject,
-    receivedAt,
-  },
-});
-```
-
----
 
 ## Employee events
 
@@ -273,17 +256,6 @@ Productivity Score
        └── Alert
 ```
 
-Example event:
-
-```ts
-await inngest.send({
-  name: "employee.productivity.updated",
-  data: {
-    employeeId: "emp_123",
-    productivityScore: 62,
-    period: "weekly",
-  },
-});
 ```
 
 ---
@@ -435,4 +407,3 @@ This avoids requiring the browser to constantly poll the API.
 
 
 
-That architecture makes Bossy a practical project for learning **Node.js, PostgreSQL, Redis, WebSockets, OAuth integrations, event-driven architecture, background jobs, retries, scheduling, and durable workflows**.
